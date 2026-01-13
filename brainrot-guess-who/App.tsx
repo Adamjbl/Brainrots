@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Character, GameState, GamePhase } from './types';
 import { CHARACTERS } from './constants';
 import CharacterCard from './components/CharacterCard';
+import ModelView from './components/ModelView';
 import { getSmartHint } from './geminiService';
 
 const App: React.FC = () => {
@@ -17,6 +18,41 @@ const App: React.FC = () => {
   });
 
   const [isLoadingHint, setIsLoadingHint] = useState(false);
+  const [showModelView, setShowModelView] = useState(false);
+  const [secretClicks, setSecretClicks] = useState(0);
+  const [keySequence, setKeySequence] = useState<string[]>([]);
+
+  // Secret keyboard shortcut: Press 'B' 'R' 'O' to open model view
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      setKeySequence(prev => {
+        const newSeq = [...prev, key].slice(-3);
+        if (newSeq.join('') === 'bro') {
+          setShowModelView(true);
+          return [];
+        }
+        return newSeq;
+      });
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Secret click on title: 5 rapid clicks
+  const handleSecretClick = useCallback(() => {
+    setSecretClicks(prev => {
+      const newCount = prev + 1;
+      if (newCount >= 5) {
+        setShowModelView(true);
+        return 0;
+      }
+      // Reset after 2 seconds of no clicks
+      setTimeout(() => setSecretClicks(0), 2000);
+      return newCount;
+    });
+  }, []);
 
   const startPicking = () => {
     setGameState({
@@ -87,9 +123,20 @@ const App: React.FC = () => {
     <div className="min-h-screen p-4 md:p-6 flex flex-col items-center select-none">
       <div className="fixed top-0 left-0 w-full h-2 status-bar z-50"></div>
 
+      {/* MODEL VIEW (HIDDEN) */}
+      {showModelView && (
+        <ModelView
+          characters={CHARACTERS}
+          onClose={() => setShowModelView(false)}
+        />
+      )}
+
       {/* HEADER DYNAMIQUE */}
       <header className="w-full max-w-6xl mb-8 text-center">
-        <h1 className="text-5xl md:text-8xl font-impact tracking-tighter italic scale-y-110">
+        <h1
+          className="text-5xl md:text-8xl font-impact tracking-tighter italic scale-y-110 cursor-pointer select-none"
+          onClick={handleSecretClick}
+        >
           <span className="text-[#ff6b6b]">BRAINROT</span>
           <span className="text-white">_GUESS_</span>
           <span className="text-[#4ecdc4]">WHO</span>
