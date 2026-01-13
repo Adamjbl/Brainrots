@@ -1,10 +1,9 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Character, GameState, GamePhase } from './types';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Character, GameState } from './types';
 import { CHARACTERS } from './constants';
 import CharacterCard from './components/CharacterCard';
 import ModelView from './components/ModelView';
-import { getSmartHint } from './geminiService';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>({
@@ -17,9 +16,8 @@ const App: React.FC = () => {
     score: 100,
   });
 
-  const [isLoadingHint, setIsLoadingHint] = useState(false);
   const [showModelView, setShowModelView] = useState(false);
-  const [secretClicks, setSecretClicks] = useState(0);
+  const secretClicksRef = useRef({ count: 0, timerId: null as NodeJS.Timeout | null });
   const [keySequence, setKeySequence] = useState<string[]>([]);
 
   // Secret keyboard shortcut: Press 'B' 'R' 'O' to open model view
@@ -42,16 +40,24 @@ const App: React.FC = () => {
 
   // Secret click on title: 5 rapid clicks
   const handleSecretClick = useCallback(() => {
-    setSecretClicks(prev => {
-      const newCount = prev + 1;
-      if (newCount >= 5) {
-        setShowModelView(true);
-        return 0;
-      }
+    // Clear any existing timer
+    if (secretClicksRef.current.timerId) {
+      clearTimeout(secretClicksRef.current.timerId);
+    }
+
+    secretClicksRef.current.count += 1;
+
+    if (secretClicksRef.current.count >= 5) {
+      setShowModelView(true);
+      secretClicksRef.current.count = 0;
+      secretClicksRef.current.timerId = null;
+    } else {
       // Reset after 2 seconds of no clicks
-      setTimeout(() => setSecretClicks(0), 2000);
-      return newCount;
-    });
+      secretClicksRef.current.timerId = setTimeout(() => {
+        secretClicksRef.current.count = 0;
+        secretClicksRef.current.timerId = null;
+      }, 2000);
+    }
   }, []);
 
   const startPicking = () => {
@@ -103,20 +109,7 @@ const App: React.FC = () => {
         score: Math.max(0, prev.score - 20),
         eliminatedIds: [...prev.eliminatedIds, character.id]
       }));
-      requestNewHint();
     }
-  };
-
-  const requestNewHint = async () => {
-    if (!gameState.targetCharacter || isLoadingHint) return;
-    setIsLoadingHint(true);
-    const newHint = await getSmartHint(gameState.targetCharacter, gameState.hints);
-    setGameState(prev => ({
-      ...prev,
-      hints: [newHint, ...prev.hints].slice(0, 3),
-      score: Math.max(0, prev.score - 10)
-    }));
-    setIsLoadingHint(false);
   };
 
   return (
@@ -187,28 +180,7 @@ const App: React.FC = () => {
 
       {/* PHASE 3: GUESSING */}
       {gameState.phase === 'GUESSING' && (
-        <main className="w-full max-w-7xl flex flex-col lg:flex-row gap-6">
-          <div className="lg:w-1/3 space-y-4">
-            <div className="bg-white/5 backdrop-blur-xl border-4 border-white/10 p-6 rounded-[2rem]">
-              <div className="text-xs font-black text-white/40 mb-4 tracking-widest">BRAINROT_HINT_FEED</div>
-              <div className="space-y-4 mb-6">
-                {gameState.hints.map((h, i) => (
-                  <div key={i} className={`p-4 rounded-2xl font-bold ${i === 0 ? 'bg-white text-black' : 'bg-white/10 text-white/50'}`}>
-                    {h}
-                  </div>
-                ))}
-              </div>
-              <button 
-                onClick={requestNewHint}
-                className="w-full py-5 bg-yellow-400 text-black font-impact text-2xl italic hover:bg-yellow-300 transition-all shadow-[8px_8px_0_#fff]"
-              >
-                ASK THE BRO (-10 PTS)
-              </button>
-            </div>
-            <div className="bg-[#ff6b6b] p-6 rounded-[2rem] text-center font-impact text-4xl italic shadow-xl">
-              SCORE: {gameState.score}
-            </div>
-          </div>
+      <main className="w-full max-w-8xl flex flex-col lg:flex-row gap-6 items-center justify-center">
 
           <div className="lg:w-2/3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3">
             {CHARACTERS.map(char => (
