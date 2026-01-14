@@ -37,7 +37,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
   return (
     <div
       className={`relative group transition-all duration-300 card-shake ${
-        isEliminated ? 'opacity-20 grayscale-0 scale-90 translate-y-4 pointer-events-none' : 'opacity-100 scale-100'
+        isEliminated ? 'hidden' : 'opacity-100 scale-100'
       }`}
     >
       <div className={`bg-white/5 rounded-[1.5rem] overflow-hidden transition-all duration-300 border-4 ${
