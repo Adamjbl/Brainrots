@@ -168,7 +168,7 @@ const App: React.FC = () => {
       {gameState.phase === 'TRANSITION' && (
         <div className="flex-1 flex flex-col items-center justify-center text-center p-10 bg-white text-black rounded-[3rem] shadow-[20px_20px_0_#ff6b6b] animate-pulse">
           <h2 className="text-8xl font-impact mb-6">BRAINROT_LOADING...</h2>
-          <p className="text-2xl font-bold mb-10">PASSE LE TEL AU BRO SANS REGARDER 💀</p>
+          <p className="text-2xl font-bold mb-10">PASSE L'ORDI AU BRO SANS REGARDER 💀</p>
           <button
             onClick={startGuessing}
             className="bg-black text-white font-impact text-4xl px-12 py-8 hover:bg-zinc-800 transition-all active:scale-90"
@@ -200,9 +200,8 @@ const App: React.FC = () => {
       {/* PHASE 4: GAMEOVER (WIN) */}
       {gameState.phase === 'GAMEOVER' && (
         <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-6">
-          <div className="text-[15rem] leading-none mb-4 animate-bounce">🧠</div>
-          <h2 className="text-8xl font-impact italic text-[#4ecdc4] mb-4">BRAINROT_FOUND</h2>
-          <p className="text-3xl font-bold text-white mb-10">JOUEUR 2 A TROUVÉ LE BRAINROT !</p>
+          <h2 className="bg-black text-8xl font-impact italic text-[#4ecdc4] mb-4 animate-bounce relative z-10">BRAINROT_FOUND 🔥</h2>
+            <img src="/images/win.gif" alt="Victory" className="w-[28rem] h-[28rem] object-cover mb-4 animate-bounce" />
           <div className="bg-white text-black p-8 text-center mb-10 transform rotate-2">
              <div className="text-sm font-bold uppercase">C'était</div>
              <div className="text-4xl font-impact">{gameState.targetCharacter?.name}</div>
